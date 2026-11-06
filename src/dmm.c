@@ -634,7 +634,7 @@ void *dmm_thread(void *data) {
 	int i;
 
 	if (sr_init(&dmm->sr_ctx) != SR_OK) {
-		printf("Error creating context\n");
+		blog(LOG_ERROR, "Error creating context\n");
 		return NULL;
 	}
 
@@ -649,13 +649,13 @@ void *dmm_thread(void *data) {
 	}
 
 	if (NULL == driver) {
-		printf("Error finding the driver. Is your sigrok up to date?\n");
+		blog(LOG_ERROR, "Error finding the driver. Is your sigrok up to date?\n");
 		sr_exit(dmm->sr_ctx);
 		return NULL;
 	}
 
 	if (SR_OK != sr_driver_init(dmm->sr_ctx, driver)) {
-		printf("Error initializing the driver\n");
+		blog(LOG_ERROR, "Error initializing the driver\n");
 		sr_exit(dmm->sr_ctx);
 		return NULL;
 	}
@@ -684,21 +684,21 @@ void *dmm_thread(void *data) {
 
 
 			current_device = devices->data;
-			printf("Found %s\n", sr_dev_inst_model_get(current_device));
+			blog(LOG_INFO, "Found %s\n", sr_dev_inst_model_get(current_device));
 			g_slist_free(devices);
 
 			sr_session_new(dmm->sr_ctx, &dmm->session);
 			sr_session_datafeed_callback_add(dmm->session, datafeed_in, dmm);
 
 			if (SR_OK != sr_dev_open(current_device)) {
-				printf("Unable to open device!\n");
+				blog(LOG_ERROR, "Unable to open device!\n");
 				sr_session_destroy(dmm->session);
 				current_device = NULL;
 				continue;
 			}
 
 			if (SR_OK != sr_session_dev_add(dmm->session, current_device)) {
-				printf("Error adding device to the session\n");
+				blog(LOG_ERROR, "Error adding device to the session\n");
 				sr_session_destroy(dmm->session);
 				current_device = NULL;
 				continue;
