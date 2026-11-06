@@ -1,11 +1,15 @@
 #ifndef _DMM_H
 #define _DMM_H
 
+#ifndef TESTBED
 #include <libsigrok/libsigrok.h>
 #include <obs-module.h>
 #include <util/threading.h>
 #include <util/platform.h>
 #include <obs.h>
+#endif
+
+#include <stdbool.h>
 
 #define WIDTH 280
 #define HEIGHT 180
@@ -13,11 +17,13 @@
 #define MAX_HIST 23
 
 struct dmm {
-
+#ifndef TESTBED
     obs_source_t *source;
     os_event_t *stop_signal;
     pthread_t vthread;
     pthread_t dthread;
+#endif
+
     bool initialized;
 	bool run;
 

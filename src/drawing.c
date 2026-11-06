@@ -122,7 +122,7 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 	}
 }
 
-
+#ifndef TESTBED
 void *video_thread(void *data) {
 	struct dmm *dmm = data;
 	uint32_t pixels[WIDTH * HEIGHT];
@@ -215,3 +215,75 @@ void *video_thread(void *data) {
 
 	return NULL;
 }
+#endif
+
+#ifdef TESTBED
+int main(int argc, char *argv[]) {
+	int annunciator_test = 0;
+	if (argc == 2 && (strcmp(argv[1], "-a") == 0 || strcmp(argv[1], "--all") == 0)) {
+		annunciator_test = 1;
+	}
+
+	struct dmm *dmm = calloc(1, sizeof(struct dmm));
+
+	gdImagePtr background;
+
+	background = gdImageCreateTrueColor(WIDTH, HEIGHT);
+	gdImageSaveAlpha(background, true);
+	gdImageAlphaBlending(background, true);
+
+	int bgcol = gdImageColorAllocateAlpha(background, 128, 228, 188, 0);
+	int speckle = gdImageColorAllocateAlpha(background, 115, 115, 115, 110);
+
+	gdImageFilledRectangle(background, 0, 0, WIDTH, HEIGHT, bgcol);
+
+	for (int y = 0; y < HEIGHT; y++) {
+		for (int x = 0; x < WIDTH; x++) {
+			if ((rand() % 100) > 80) {
+				gdImageSetPixel(background, x, y, speckle);
+			}
+		}
+	}
+
+	dmm->fade = 255;
+
+		gdImagePtr img = gdImageCreateTrueColor(WIDTH, HEIGHT);
+		gdImageSaveAlpha(img, true);
+		gdImageAlphaBlending(img, true);
+
+		gdImageCopy(img, background, 0, 0, 0, 0, WIDTH, HEIGHT);
+
+		gdImagePtr lcd = gdImageCreateTrueColor(WIDTH, HEIGHT);
+		gdImageSaveAlpha(lcd, true);
+		gdImageAlphaBlending(lcd, false);
+
+		int lcd_bg = gdImageColorAllocateAlpha(lcd, 200, 0, 0, 127);
+		int lcd_shadow = gdImageColorAllocateAlpha(lcd, 0, 0, 0, 100);
+		int lcd_hint = gdImageColorAllocateAlpha(lcd, 0, 0, 0, 120);
+		int lcd_text = gdImageColorAllocateAlpha(lcd, 0, 0, 0, (rand() % 10) + 20);
+
+		gdImageFilledRectangle(lcd, 0, 0, WIDTH, HEIGHT, lcd_bg);
+		gdImageAlphaBlending(lcd, true);
+
+
+		main_image(lcd, annunciator_test ? NULL : dmm, 0.0075, lcd_shadow);
+		main_image(lcd, NULL, 0, lcd_hint);
+		main_image(lcd, annunciator_test ? NULL : dmm, 0, lcd_text);
+
+
+		gdImageCopy(img, lcd, 0, 0, 0, 0, WIDTH, HEIGHT);
+
+		gdImageDestroy(lcd);
+
+		FILE *fpOut = fopen("output.png", "wb");
+		if (fpOut != NULL) {
+			gdImagePngEx(img, fpOut, 0);
+		} else {
+			perror("barf: ");
+		}
+
+		gdImageDestroy(img);
+
+	return 0;
+}
+#endif
