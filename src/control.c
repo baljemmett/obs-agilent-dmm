@@ -21,7 +21,7 @@ static int singleton = 0;
 
 static const char *dmm_get_name(void *unused) {
 	UNUSED_PARAMETER(unused);
-	return "UT61E DMM";
+	return "Agilent DMM";
 }
 
 static void dmm_destroy(void *data) {
@@ -108,8 +108,8 @@ static uint32_t dmm_get_height(void *data) {
 	return HEIGHT;
 }
 
-struct obs_source_info ut61e_source = {
-	.id				= "ut61e_source",
+struct obs_source_info agilent_dmm_source = {
+	.id				= "agilent_dmm_source",
 	.type			= OBS_SOURCE_TYPE_INPUT,
 	.output_flags	= OBS_SOURCE_ASYNC_VIDEO,
 	.get_name		= dmm_get_name,

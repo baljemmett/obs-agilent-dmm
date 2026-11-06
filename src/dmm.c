@@ -642,7 +642,7 @@ void *dmm_thread(void *data) {
 	driver = NULL;
 
 	for (i = 0; drivers[i]; i++) {
-		if (strcmp(drivers[i]->name, "uni-t-ut61e") == 0) {
+		if (strcmp(drivers[i]->name, "agilent-dmm") == 0) {
 			driver = drivers[i];
 			break;
 		}
@@ -660,13 +660,16 @@ void *dmm_thread(void *data) {
 		return NULL;
 	}
 
-	conf = malloc(sizeof(struct sr_config));
+	conf = calloc(2, sizeof(struct sr_config));
 
+        conf[0].key = SR_CONF_CONN;
+        conf[0].data = g_variant_new_string("/dev/tty.PL2303-USBtoUART13430");
 
-	conf->key = SR_CONF_CONN;
-	conf->data = g_variant_new_string("1a86.e008");
+        conf[1].key = SR_CONF_SERIALCOMM;
+        conf[1].data = g_variant_new_string("9600/8n1");
 
-	drvopts = g_slist_append(drvopts, conf);
+	drvopts = g_slist_append(drvopts, &conf[0]);
+	drvopts = g_slist_append(drvopts, &conf[1]);
 
     while (os_event_try(dmm->stop_signal) == EAGAIN) {
 
