@@ -83,6 +83,19 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 
 	local_v_offset = 0.0;
 
+	if (dmm == NULL) {
+		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.07), 0, COORD(0.55, 0.125), "8.8.8.8.8");
+	} else {
+		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.07), 0, COORD(0.55, 0.125), dmm->text_temperature);
+	}
+
+	if ((1) || (dmm == NULL) || dmm->temperature_is_negative) gdImageFilledRectangle(img, COORD(0.50, 0.0725), COORD(0.54, 0.0825), color);
+
+	if ((dmm == NULL) || 1) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.020), 0, COORD(0.935, 0.06), "°");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.020), 0, COORD(0.97, 0.06), "°");
+
+	if ((dmm == NULL) || 1) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.020), 0, COORD(0.94, 0.08), "C");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.020), 0, COORD(0.98, 0.08), "F");
 
 	if (dmm != NULL) {
 		float maxval = 0;
