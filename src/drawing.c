@@ -68,8 +68,8 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == FARADS) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.935, 0.30), "F");
 
 
-	if ((dmm == NULL) || dmm->autorange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.28, 0.37), "AUTO");
-	if ((dmm == NULL) || dmm->manurange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.45, 0.37), "MANU");
+	//if ((dmm == NULL) || dmm->autorange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.28, 0.37), "AUTO");
+	//if ((dmm == NULL) || dmm->manurange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.45, 0.37), "MANU");
 
 
 	if ((dmm == NULL) || dmm->is_negative) gdImageFilledRectangle(img, COORD(0.01, 0.195), COORD(0.07, 0.215), color);
