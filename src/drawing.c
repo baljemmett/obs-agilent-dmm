@@ -16,11 +16,12 @@ const char *text_font = FONT_PATH "LiberationSans-Bold.ttf";
 const char *seg_font = FONT_PATH "DSEG7Classic-BoldItalic.ttf";
 const char *dmm_font = FONT_PATH "DMM.ttf";
 
-#define COORD(X, Y) ((X) + offset) * WIDTH, ((Y) + offset) * WIDTH
+#define COORD(X, Y) ((X) + offset) * WIDTH, ((Y) + offset + local_v_offset) * WIDTH
 #define SIZE(X) (X) * WIDTH
 
 
 void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
+	float local_v_offset = 0.15;
 
 	if ((dmm == NULL) || (dmm->current_range & VOLTS) || (dmm->current_range & AMPS)) {
 		if ((dmm == NULL) || (dmm->current_range & 0xF000) == DC)
@@ -79,6 +80,8 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 	} else {
 		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.30), dmm->text);
 	}
+
+	local_v_offset = 0.0;
 
 
 	if (dmm != NULL) {
