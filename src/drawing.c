@@ -10,10 +10,11 @@
 
 #include "dmm.h"
 
-const char *text_font = "LiberationSans-Bold.ttf";
-const char *seg_font = "DSEG7Classic-BoldItalic.ttf";
-const char *dmm_font = "DMM.ttf";
+#define FONT_PATH "/Users/baljemmett/gits/obs-uni-t-ut61e/fonts/"
 
+const char *text_font = FONT_PATH "LiberationSans-Bold.ttf";
+const char *seg_font = FONT_PATH "DSEG7Classic-BoldItalic.ttf";
+const char *dmm_font = FONT_PATH "DMM.ttf";
 
 #define COORD(X, Y) ((X) + offset) * WIDTH, ((Y) + offset) * WIDTH
 #define SIZE(X) (X) * WIDTH
