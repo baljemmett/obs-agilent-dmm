@@ -1,2 +1,0 @@
-/usr/local/obs-plugins/64bit/tenmascope-obs.so
-/usr/local/data/obs-plugins/tenmascope-obs/locale/en-US.ini

@@ -1,97 +1,54 @@
-cmake_minimum_required(VERSION 3.16...3.21)
+cmake_minimum_required(VERSION 3.28...3.30)
 
-# Change obs-plugintemplate to your plugin's name in a machine-readable format (e.g.:
-# obs-myawesomeplugin) and set
-project(obs-uni-t-ut61e VERSION 1.0.0)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/bootstrap.cmake" NO_POLICY_SCOPE)
+
+project(${_name} VERSION ${_version})
+
+option(ENABLE_FRONTEND_API "Use obs-frontend-api for UI functionality" OFF)
+option(ENABLE_QT "Use Qt functionality" OFF)
+
+include(compilerconfig)
+include(defaults)
+include(helpers)
+
 add_library(${CMAKE_PROJECT_NAME} MODULE)
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
-# Replace `Your Name Here` with the name (yours or your organization's) you want to see as the
-# author of the plugin (in the plugin's metadata itself and in the installers)
-set(PLUGIN_AUTHOR "Majenko Technologies")
-
-# Replace `com.example.obs-plugin-template` with a unique Bundle ID for macOS releases (used both in
-# the installer and when submitting the installer for notarization)
-set(MACOS_BUNDLEID "com.example.${CMAKE_PROJECT_NAME}")
-
-# Replace `me@contoso.com` with the maintainer email address you want to put in Linux packages
-set(LINUX_MAINTAINER_EMAIL "git@majenko.co.uk")
-
-# Add your custom source files here - header files are optional and only required for visibility
-# e.g. in Xcode or Visual Studio
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/obs-plugin.c src/drawing.c src/dmm.c src/control.c
-)
-
-# Import libobs as main plugin dependency
 find_package(libobs REQUIRED)
-include(cmake/ObsPluginHelpers.cmake)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
-pkg_check_modules(deps REQUIRED IMPORTED_TARGET libsigrok)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE PkgConfig::deps)
+if(ENABLE_FRONTEND_API)
+  find_package(obs-frontend-api REQUIRED)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::obs-frontend-api)
+endif()
 
+if(ENABLE_QT)
+  find_package(Qt6 COMPONENTS Widgets Core)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt6::Core Qt6::Widgets)
+  target_compile_options(
+    ${CMAKE_PROJECT_NAME}
+    PRIVATE $<$<C_COMPILER_ID:Clang,AppleClang>:-Wno-quoted-include-in-framework-header -Wno-comma>
+  )
+  set_target_properties(
+    ${CMAKE_PROJECT_NAME}
+    PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON
+  )
+endif()
 
-# Uncomment these lines if you want to use the OBS Frontend API in your plugin
-#[[
-find_package(obs-frontend-api REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::obs-frontend-api)
-#]]
-
-# Uncomment those lines if you want to use Qt in your plugin
-#[[
-find_qt(COMPONENTS Widgets Core)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt::Core Qt::Widgets)
-set_target_properties(
-  ${CMAKE_PROJECT_NAME}
-  PROPERTIES AUTOMOC ON
-             AUTOUIC ON
-             AUTORCC ON)
-#]]
-
-configure_file(src/plugin-macros.h.in ${CMAKE_SOURCE_DIR}/src/plugin-macros.generated.h)
-
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-macros.generated.h)
-
-# /!\ TAKE NOTE: No need to edit things past this point /!\
-
-# --- Platform-independent build settings ---
-
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/control.c src/dmm.c src/drawing.c src/obs-plugin.c)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/ffjpeg-md/src)
 
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs glib-2.0 sigrok gd)
+set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
 
-# --- End of section ---
+configure_file(src/plugin-macros.h.in ${CMAKE_SOURCE_DIR}/src/plugin-macros.generated.h)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-macros.generated.h)
 
-# --- Windows-specific build settings and tasks ---
-if(OS_WINDOWS)
-  configure_file(cmake/bundle/windows/installer-Windows.iss.in
-                 ${CMAKE_BINARY_DIR}/installer-Windows.generated.iss)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0 libsigrok gdlib)
 
-  configure_file(cmake/bundle/windows/resource.rc.in ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.rc)
-  target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.rc)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE PkgConfig::deps)
 
-  if(MSVC)
-    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE /W4)
-  endif()
-  # --- End of section ---
-
-  # -- macOS specific build settings and tasks --
-elseif(OS_MACOS)
-  configure_file(cmake/bundle/macos/installer-macos.pkgproj.in
-                 ${CMAKE_BINARY_DIR}/installer-macos.generated.pkgproj)
-
-  set(MACOSX_PLUGIN_GUI_IDENTIFIER "${MACOS_BUNDLEID}")
-  set(MACOSX_PLUGIN_BUNDLE_VERSION "${CMAKE_PROJECT_VERSION}")
-  set(MACOSX_PLUGIN_SHORT_VERSION_STRING "1")
-
-  target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall)
-  # --- End of section ---
-
-  # --- Linux-specific build settings and tasks ---
-else()
-  target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall)
-endif()
-# --- End of section ---
-
-setup_plugin_target(${CMAKE_PROJECT_NAME})
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
