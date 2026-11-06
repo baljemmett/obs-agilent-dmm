@@ -25,6 +25,8 @@ struct dmm {
 
     struct sr_context *sr_ctx;
     struct sr_session *session;
+    const struct sr_channel *sr_channel;
+    const struct sr_channel *sr_channel_temperature;
 
     time_t last_update;
 	float previous_value[MAX_HIST];
@@ -32,8 +34,10 @@ struct dmm {
     int decimal;
 
 	bool is_negative;
+	bool temperature_is_negative;
 
-	char text[10];
+	char text[20];
+	char text_temperature[20];
 
 	int previous_range;
 	int current_range;

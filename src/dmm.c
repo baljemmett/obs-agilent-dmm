@@ -11,17 +11,48 @@ void dmm_terminate(struct dmm *dmm) {
 	sr_session_stop(dmm->session);
 }
 
+void format_temperature(struct dmm *dmm, const struct sr_datafeed_analog *data) {
+	float value;
+
+	sr_analog_to_float(data, &value);
+
+	if (data->meaning->mq != SR_MQ_TEMPERATURE)
+		return;
+
+	snprintf(dmm->text_temperature, 20, "%6.1f", fabs(value));
+	dmm->temperature_is_negative = (value < 0);
+
+	if (isinf(value)) {
+		snprintf(dmm->text_temperature, 20, "!!--.-");
+	}
+
+	for (char *ptr = dmm->text_temperature; *ptr; ptr++) {
+		if (*ptr == ' ') *ptr = '!';
+	}
+}
+
+
 void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const struct sr_datafeed_packet *packet, void *cb_data) {
 
 	struct dmm *dmm = cb_data;
 
 	if (SR_DF_ANALOG == packet->type) {
-
-		dmm->last_update = time(NULL);
 		const struct sr_datafeed_analog *data = packet->payload;
+
+		if (dmm->sr_channel != NULL) {
+			const struct sr_channel *display = g_slist_nth_data(data->meaning->channels, 0);
+
+			if (display == dmm->sr_channel_temperature) {
+				format_temperature(dmm, data);
+				return;
+			} else if (display != dmm->sr_channel) {
+				return;
+			}
+		}
 
 		float value;
 
+		dmm->last_update = time(NULL);
 		sr_analog_to_float(data, &value);
 
     	dmm->autorange = (data->meaning->mqflags & SR_MQFLAG_AUTORANGE);
@@ -622,6 +653,8 @@ void *dmm_thread(void *data) {
 	struct dmm *dmm = data;
 
 	dmm->sr_ctx = NULL;
+	dmm->sr_channel = NULL;
+	dmm->sr_channel_temperature = NULL;
 
 	struct sr_dev_driver *driver;
 	struct sr_dev_driver **drivers;
@@ -685,10 +718,46 @@ void *dmm_thread(void *data) {
 
 			current_device = devices->data;
 			blog(LOG_INFO, "Found %s\n", sr_dev_inst_model_get(current_device));
+
+			if (current_device) {
+				struct sr_channel *ch;
+				GSList *channels = g_slist_copy(sr_dev_inst_channels_get(current_device));
+				GSList *l;
+
+			        if (!channels) {
+					blog(LOG_ERROR, "Error retrieving channel list from device\n");
+					sr_session_destroy(dmm->session);
+					current_device = NULL;
+					continue;
+				}
+
+        			for (i = 0, l = channels; l; l = l->next) {
+                			ch = l->data;
+                			if (!ch->enabled)
+                        			continue;
+                			if (ch->type != SR_CHANNEL_ANALOG)
+                        			continue;
+
+                			switch (++i)
+                			{
+                			case 1:
+                        			dmm->sr_channel = ch;
+                        			break;
+					case 3:
+						dmm->sr_channel_temperature = ch;
+						break;
+                			default:
+                        			blog(LOG_INFO, "Ignoring display number %u at %p.\n", i, ch);
+                        			break;
+                			}
+        			}
+			}
+
 			g_slist_free(devices);
 
 			sr_session_new(dmm->sr_ctx, &dmm->session);
 			sr_session_datafeed_callback_add(dmm->session, datafeed_in, dmm);
+
 
 			if (SR_OK != sr_dev_open(current_device)) {
 				blog(LOG_ERROR, "Unable to open device!\n");
