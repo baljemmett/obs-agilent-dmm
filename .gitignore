@@ -1,0 +1,6 @@
+.DS_Store
+.deps
+CMakeCache.txt
+CMakeFiles
+build_*
+src/plugin-macros.generated.h
